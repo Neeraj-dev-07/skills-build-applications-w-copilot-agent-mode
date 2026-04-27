@@ -16,7 +16,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+
 from . import views
+from django.http import JsonResponse, HttpResponseRedirect
+def root_redirect(request):
+    return HttpResponseRedirect('/api/')
+import os
 
 router = DefaultRouter()
 router.register(r'users', views.UserViewSet, basename='user')
@@ -25,8 +30,16 @@ router.register(r'workouts', views.WorkoutViewSet, basename='workout')
 router.register(r'activities', views.ActivityViewSet, basename='activity')
 router.register(r'leaderboard', views.LeaderboardViewSet, basename='leaderboard')
 
+
+# Custom API root to return Codespace URL
+def codespace_api_root(request):
+    codespace_name = os.environ.get('CODESPACE_NAME', 'localhost')
+    api_url = f"https://{codespace_name}-8000.app.github.dev/api/"
+    return JsonResponse({"api_url": api_url})
+
 urlpatterns = [
+    path('', root_redirect),
     path('admin/', admin.site.urls),
-    path('', views.api_root, name='api-root'),
-    path('', include(router.urls)),
+    path('api/', codespace_api_root, name='api-root'),
+    path('api/', include(router.urls)),
 ]
